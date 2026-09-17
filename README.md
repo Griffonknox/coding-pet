@@ -1,6 +1,20 @@
-# Tauri + Vanilla TS
+# Coding Pet
 
-This template should help get you started developing with Tauri in vanilla HTML, CSS and Typescript.
+Coding Pet is a small Tauri desktop companion built with vanilla TypeScript.
+
+## Local event receiver
+
+The Tauri process listens only on `127.0.0.1:39421` for `POST /events`. Incoming JSON is forwarded to the frontend, validated as a generic `PetEvent`, and then passed to `handlePetEvent()`.
+
+With Coding Pet running in development, test the external receiver with:
+
+```sh
+curl -X POST http://127.0.0.1:39421/events \
+	-H 'Content-Type: application/json' \
+	-d '{"type":"working"}'
+```
+
+Valid event types are `idle`, `working`, `success`, and `error`. Invalid payloads are ignored by the frontend.
 
 ## Recommended IDE Setup
 

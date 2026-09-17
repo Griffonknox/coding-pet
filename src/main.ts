@@ -1,5 +1,7 @@
 import { PET_STATE_LABELS, petStateStore, type PetState } from "./pet/pet-state";
-import { handlePetEvent } from "./pet/pet-event";
+import { handlePetEvent, parsePetEvent } from "./pet/pet-event";
+import { listen } from "@tauri-apps/api/event";
+import { isTauri } from "@tauri-apps/api/core";
 import {
   PET_TYPE_DETAILS,
   PET_TYPE_OPTIONS,
@@ -176,6 +178,16 @@ function render(): void {
       appState.showControls = false;
       render();
     });
+  });
+}
+
+if (isTauri()) {
+  void listen<unknown>("pet-event", ({ payload }) => {
+    const event = parsePetEvent(payload);
+    if (event) {
+      handlePetEvent(event);
+      render();
+    }
   });
 }
 
