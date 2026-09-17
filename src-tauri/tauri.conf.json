@@ -14,8 +14,8 @@
     "windows": [
       {
         "title": "coding-pet",
-        "width": 420,
-        "height": 500
+        "width": 320,
+        "height": 320
       }
     ],
     "security": {

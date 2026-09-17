@@ -1,31 +1,29 @@
 import { PET_STATE_LABELS, petStateStore, type PetState } from "./pet/pet-state";
-
-type PetType = "hamster" | "bear" | "fox";
-
-interface PetDefinition {
-  type: PetType;
-  name: string;
-  emoji: string;
-  trait: string;
-}
-
-const pets: PetDefinition[] = [
-  { type: "hamster", name: "Hamster", emoji: "🐹", trait: "Cute" },
-  { type: "bear", name: "Bear", emoji: "🐻", trait: "Tough" },
-  { type: "fox", name: "Fox", emoji: "🦊", trait: "Balanced" },
-];
+import {
+  PET_TYPE_DETAILS,
+  PET_TYPE_OPTIONS,
+  type PetType,
+} from "./pet/pet-type";
 
 const appState: {
   selectedPet: PetType | null;
+  showControls: boolean;
 } = {
   selectedPet: null,
+  showControls: false,
 };
 
 const appElement = document.querySelector("#app");
 
+function toggleControls(): void {
+  appState.showControls = !appState.showControls;
+  render();
+}
+
 function setSelectedPet(type: PetType): void {
   appState.selectedPet = type;
   petStateStore.set("idle");
+  appState.showControls = false;
   render();
 }
 
@@ -36,76 +34,107 @@ function setPetState(state: PetState): void {
 
 function renderSelection(): string {
   return `
-    <main class="pet-app">
-      <header class="app-header">
-        <span class="eyebrow">Coding Pet</span>
-        <h1>Choose your companion</h1>
-      </header>
+    <main class="pet-shell">
+      <div class="pet-stage empty-stage">
+        <div class="pet-focus">
+          <span class="pet-emoji large">🐾</span>
+        </div>
 
-      <section class="pet-options" aria-label="Select a pet">
-        ${pets
-          .map(
-            (pet) => `
-              <button
-                class="pet-card"
-                type="button"
-                data-pet="${pet.type}"
-                aria-label="Select ${pet.name}"
-              >
-                <span class="pet-emoji">${pet.emoji}</span>
-                <span class="pet-name">${pet.name}</span>
-                <span class="pet-trait">${pet.trait}</span>
+        <div class="hover-controls ${appState.showControls ? "is-open" : ""}">
+          ${appState.showControls
+            ? `
+              <div class="control-group pet-group" aria-label="Choose a pet">
+                ${PET_TYPE_OPTIONS.map(
+                  (pet) => `
+                    <button
+                      type="button"
+                      class="mini-button pet-option"
+                      data-pet="${pet.type}"
+                      aria-label="Select ${pet.name}"
+                      title="${pet.name}"
+                    >
+                      ${pet.emoji}
+                    </button>
+                  `,
+                ).join("")}
+                <button type="button" class="mini-button action-button" data-action="collapse-controls" aria-label="Hide controls" title="Hide controls">
+                  ←
+                </button>
+              </div>
+            `
+            : `
+              <button type="button" class="cog-button" data-action="toggle-controls" aria-label="Open options" title="Options">
+                ⚙
               </button>
-            `,
-          )
-          .join("")}
-      </section>
+            `}
+        </div>
+      </div>
     </main>
   `;
 }
 
 function renderPetView(): string {
-  const pet = pets.find((candidate) => candidate.type === appState.selectedPet);
+  const pet = appState.selectedPet ? PET_TYPE_DETAILS[appState.selectedPet] : null;
 
   if (!pet) {
     return renderSelection();
   }
 
   return `
-    <main class="pet-app compact">
-      <header class="app-header">
-        <span class="eyebrow">Coding Pet</span>
-      </header>
-
-      <section class="pet-display" aria-live="polite">
-        <div class="pet-avatar" aria-label="${pet.name}">${pet.emoji}</div>
-        <h2>${pet.name}</h2>
-        <p class="pet-trait">${pet.trait}</p>
-        <div class="state-panel">
-          <span class="state-label">Current state</span>
-          <strong class="state-value state-${petStateStore.current}">${PET_STATE_LABELS[petStateStore.current]}</strong>
+    <main class="pet-shell">
+      <div class="pet-stage" aria-live="polite">
+        <div class="pet-focus" aria-label="${pet.name}">
+          <div class="pet-avatar">${pet.emoji}</div>
+          <div class="state-pill state-${petStateStore.current}">${PET_STATE_LABELS[petStateStore.current]}</div>
         </div>
-      </section>
 
-      <section class="state-controls" aria-label="Change pet state">
-        ${Object.entries(PET_STATE_LABELS)
-          .map(
-            ([state, label]) => `
-              <button
-                type="button"
-                class="state-button ${petStateStore.current === state ? "active" : ""}"
-                data-state="${state}"
-              >
-                ${label}
+        <div class="hover-controls ${appState.showControls ? "is-open" : ""}">
+          ${appState.showControls
+            ? `
+              <div class="control-group pet-group" aria-label="Choose a pet">
+                ${PET_TYPE_OPTIONS.map(
+                  (option) => `
+                    <button
+                      type="button"
+                      class="mini-button pet-option ${option.type === pet.type ? "selected" : ""}"
+                      data-pet="${option.type}"
+                      aria-label="Select ${option.name}"
+                      title="${option.name}"
+                    >
+                      ${option.emoji}
+                    </button>
+                  `,
+                ).join("")}
+              </div>
+
+              <div class="control-group state-group" aria-label="Change pet state">
+                ${Object.entries(PET_STATE_LABELS)
+                  .map(
+                    ([state, label]) => `
+                      <button
+                        type="button"
+                        class="mini-button state-option ${petStateStore.current === state ? "selected" : ""}"
+                        data-state="${state}"
+                        aria-label="Set state to ${label}"
+                        title="${label}"
+                      >
+                        ${label.slice(0, 1)}
+                      </button>
+                    `,
+                  )
+                  .join("")}
+                <button type="button" class="mini-button action-button" data-action="collapse-controls" aria-label="Hide controls" title="Hide controls">
+                  ←
+                </button>
+              </div>
+            `
+            : `
+              <button type="button" class="cog-button" data-action="toggle-controls" aria-label="Open options" title="Options">
+                ⚙
               </button>
-            `,
-          )
-          .join("")}
-      </section>
-
-      <button type="button" class="secondary-button" data-action="change-pet">
-        Choose another pet
-      </button>
+            `}
+        </div>
+      </div>
     </main>
   `;
 }
@@ -116,6 +145,12 @@ function render(): void {
   }
 
   appElement.innerHTML = appState.selectedPet ? renderPetView() : renderSelection();
+
+  const petStage = appElement.querySelector(".pet-stage");
+  petStage?.addEventListener("mouseleave", () => {
+    appState.showControls = false;
+    render();
+  });
 
   appElement.querySelectorAll("[data-pet]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -131,11 +166,19 @@ function render(): void {
     });
   });
 
-  const changePetButton = appElement.querySelector("[data-action='change-pet']");
-  changePetButton?.addEventListener("click", () => {
-    appState.selectedPet = null;
-    petStateStore.set("idle");
-    render();
+  const toggleButtons = appElement.querySelectorAll("[data-action='toggle-controls']");
+  toggleButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      toggleControls();
+    });
+  });
+
+  const collapseButtons = appElement.querySelectorAll("[data-action='collapse-controls']");
+  collapseButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      appState.showControls = false;
+      render();
+    });
   });
 }
 
