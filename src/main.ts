@@ -25,7 +25,7 @@ function toggleControls(): void {
 
 function setSelectedPet(type: PetType): void {
   appState.selectedPet = type;
-  handlePetEvent({ type: "idle" });
+  handlePetEvent({ type: "idle" }, render);
   appState.showControls = false;
   render();
 }
@@ -33,38 +33,30 @@ function setSelectedPet(type: PetType): void {
 function renderSelection(): string {
   return `
     <main class="pet-shell">
-      <div class="pet-stage empty-stage">
-        <div class="pet-focus">
-          <span class="pet-emoji large">🐾</span>
-        </div>
+      <div class="pet-stage empty-stage selection-stage">
+        <div class="selection-content">
+          <div class="selection-heading">
+            <span class="selection-mark">🐾</span>
+            <h1>Choose your Coding Pet</h1>
+            <p>Pick your coding companion</p>
+          </div>
 
-        <div class="hover-controls ${appState.showControls ? "is-open" : ""}">
-          ${appState.showControls
-            ? `
-              <div class="control-group pet-group" aria-label="Choose a pet">
-                ${PET_TYPE_OPTIONS.map(
-                  (pet) => `
-                    <button
-                      type="button"
-                      class="mini-button pet-option"
-                      data-pet="${pet.type}"
-                      aria-label="Select ${pet.name}"
-                      title="${pet.name}"
-                    >
-                      ${pet.emoji}
-                    </button>
-                  `,
-                ).join("")}
-                <button type="button" class="mini-button action-button" data-action="collapse-controls" aria-label="Hide controls" title="Hide controls">
-                  ←
+          <div class="pet-choice-grid" aria-label="Choose your pet">
+            ${PET_TYPE_OPTIONS.map(
+              (pet) => `
+                <button
+                  type="button"
+                  class="pet-choice"
+                  data-pet-choice="${pet.type}"
+                  aria-label="Choose ${pet.name}"
+                >
+                  <span class="pet-choice-emoji">${pet.emoji}</span>
+                  <span class="pet-choice-name">${pet.name}</span>
                 </button>
-              </div>
-            `
-            : `
-              <button type="button" class="cog-button" data-action="toggle-controls" aria-label="Open options" title="Options">
-                ⚙
-              </button>
-            `}
+              `,
+            ).join("")}
+          </div>
+
         </div>
       </div>
     </main>
@@ -160,8 +152,15 @@ function render(): void {
   appElement.querySelectorAll("[data-state]").forEach((button) => {
     button.addEventListener("click", () => {
       const state = button.getAttribute("data-state") as PetState;
-      handlePetEvent({ type: state });
+      handlePetEvent({ type: state }, render);
       render();
+    });
+  });
+
+  appElement.querySelectorAll("[data-pet-choice]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const type = button.getAttribute("data-pet-choice") as PetType;
+      setSelectedPet(type);
     });
   });
 
@@ -185,7 +184,7 @@ if (isTauri()) {
   void listen<unknown>("pet-event", ({ payload }) => {
     const event = parsePetEvent(payload);
     if (event) {
-      handlePetEvent(event);
+      handlePetEvent(event, render);
       render();
     }
   });

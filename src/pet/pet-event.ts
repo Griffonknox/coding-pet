@@ -1,6 +1,9 @@
 import { petStateStore, type PetState } from "./pet-state";
 
 export const PET_EVENT_TYPES = ["idle", "working", "success", "error"] as const;
+const TEMPORARY_STATE_DURATION_MS = 3000;
+
+let temporaryStateTimer: ReturnType<typeof setTimeout> | undefined;
 
 export type PetEventType = (typeof PET_EVENT_TYPES)[number];
 
@@ -19,7 +22,23 @@ export function parsePetEvent(payload: unknown): PetEvent | null {
     : null;
 }
 
-export function handlePetEvent(event: PetEvent): PetState {
+export function handlePetEvent(event: PetEvent, onStateChange?: () => void): PetState {
+  if (temporaryStateTimer) {
+    clearTimeout(temporaryStateTimer);
+    temporaryStateTimer = undefined;
+  }
+
   const nextState: PetState = event.type;
-  return petStateStore.set(nextState);
+  const currentState = petStateStore.set(nextState);
+  onStateChange?.();
+
+  if (event.type === "success" || event.type === "error") {
+    temporaryStateTimer = setTimeout(() => {
+      temporaryStateTimer = undefined;
+      petStateStore.set("idle");
+      onStateChange?.();
+    }, TEMPORARY_STATE_DURATION_MS);
+  }
+
+  return currentState;
 }

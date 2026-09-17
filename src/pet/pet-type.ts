@@ -6,13 +6,12 @@ export interface PetProfile {
   type: PetType;
   name: string;
   emoji: string;
-  trait: string;
 }
 
 export const PET_TYPE_DETAILS: Record<PetType, PetProfile> = {
-  hamster: { type: "hamster", name: "Hamster", emoji: "🐹", trait: "Cute" },
-  bear: { type: "bear", name: "Bear", emoji: "🐻", trait: "Tough" },
-  fox: { type: "fox", name: "Fox", emoji: "🦊", trait: "Balanced" },
+  hamster: { type: "hamster", name: "Hamster", emoji: "🐹" },
+  bear: { type: "bear", name: "Bear", emoji: "🐻" },
+  fox: { type: "fox", name: "Fox", emoji: "🦊" },
 };
 
 export const PET_TYPE_OPTIONS = Object.values(PET_TYPE_DETAILS);
