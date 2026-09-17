@@ -1,4 +1,5 @@
 import { PET_STATE_LABELS, petStateStore, type PetState } from "./pet/pet-state";
+import { handlePetEvent } from "./pet/pet-event";
 import {
   PET_TYPE_DETAILS,
   PET_TYPE_OPTIONS,
@@ -22,13 +23,8 @@ function toggleControls(): void {
 
 function setSelectedPet(type: PetType): void {
   appState.selectedPet = type;
-  petStateStore.set("idle");
+  handlePetEvent({ type: "idle" });
   appState.showControls = false;
-  render();
-}
-
-function setPetState(state: PetState): void {
-  petStateStore.set(state);
   render();
 }
 
@@ -162,7 +158,8 @@ function render(): void {
   appElement.querySelectorAll("[data-state]").forEach((button) => {
     button.addEventListener("click", () => {
       const state = button.getAttribute("data-state") as PetState;
-      setPetState(state);
+      handlePetEvent({ type: state });
+      render();
     });
   });
 
