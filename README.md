@@ -16,6 +16,29 @@ curl -X POST http://127.0.0.1:39421/events \
 
 Valid event types are `idle`, `working`, `success`, and `error`. Invalid payloads are ignored by the frontend.
 
+## OMP adapter
+
+The OMP adapter template lives at [integrations/omp/coding-pet.ts](integrations/omp/coding-pet.ts). OMP loads the adapter from:
+
+```text
+~/.omp/agent/extensions/coding-pet.ts
+```
+
+To install the repository version for OMP:
+
+```sh
+cp integrations/omp/coding-pet.ts ~/.omp/agent/extensions/coding-pet.ts
+```
+
+The adapter translates OMP lifecycle events into the generic Coding Pet contract:
+
+- `session_start` -> `idle`
+- `agent_start` -> `working`
+- terminal `agent_end` -> `success`
+- `tool_error`, `tool_timeout`, `tool_aborted`, or `tool_blocked` -> `error`
+
+It sends those events to the local receiver with HTTP `POST` requests. If Coding Pet is not running, the adapter ignores the connection failure so OMP continues normally.
+
 ## Recommended IDE Setup
 
 - [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
