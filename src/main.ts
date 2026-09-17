@@ -1,5 +1,6 @@
+import { PET_STATE_LABELS, petStateStore, type PetState } from "./pet/pet-state";
+
 type PetType = "hamster" | "bear" | "fox";
-type PetState = "idle" | "working" | "success" | "error";
 
 interface PetDefinition {
   type: PetType;
@@ -14,31 +15,22 @@ const pets: PetDefinition[] = [
   { type: "fox", name: "Fox", emoji: "🦊", trait: "Balanced" },
 ];
 
-const stateLabels: Record<PetState, string> = {
-  idle: "Idle",
-  working: "Working",
-  success: "Success",
-  error: "Error",
-};
-
 const appState: {
   selectedPet: PetType | null;
-  petState: PetState;
 } = {
   selectedPet: null,
-  petState: "idle",
 };
 
 const appElement = document.querySelector("#app");
 
 function setSelectedPet(type: PetType): void {
   appState.selectedPet = type;
-  appState.petState = "idle";
+  petStateStore.set("idle");
   render();
 }
 
 function setPetState(state: PetState): void {
-  appState.petState = state;
+  petStateStore.set(state);
   render();
 }
 
@@ -91,17 +83,17 @@ function renderPetView(): string {
         <p class="pet-trait">${pet.trait}</p>
         <div class="state-panel">
           <span class="state-label">Current state</span>
-          <strong class="state-value state-${appState.petState}">${stateLabels[appState.petState]}</strong>
+          <strong class="state-value state-${petStateStore.current}">${PET_STATE_LABELS[petStateStore.current]}</strong>
         </div>
       </section>
 
       <section class="state-controls" aria-label="Change pet state">
-        ${Object.entries(stateLabels)
+        ${Object.entries(PET_STATE_LABELS)
           .map(
             ([state, label]) => `
               <button
                 type="button"
-                class="state-button ${appState.petState === state ? "active" : ""}"
+                class="state-button ${petStateStore.current === state ? "active" : ""}"
                 data-state="${state}"
               >
                 ${label}
@@ -142,7 +134,7 @@ function render(): void {
   const changePetButton = appElement.querySelector("[data-action='change-pet']");
   changePetButton?.addEventListener("click", () => {
     appState.selectedPet = null;
-    appState.petState = "idle";
+    petStateStore.set("idle");
     render();
   });
 }
