@@ -184,6 +184,13 @@ button {
   line-height: 1;
 }
 
+.pet-choice-emoji.hamster-image {
+  width: 58px;
+  height: 58px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
 .pet-choice-name {
   font-size: 0.7rem;
   font-weight: 800;
@@ -194,9 +201,9 @@ button {
   z-index: 1;
   display: grid;
   place-items: center;
-  gap: 12px;
-  padding: 12px;
-  transform: translateY(4px);
+  gap: 8px;
+  padding: 4px;
+  transform: translateY(2px);
 }
 
 .pet-avatar {
@@ -204,12 +211,24 @@ button {
   line-height: 1;
   display: grid;
   place-items: center;
-  width: 138px;
-  height: 138px;
+  width: 166px;
+  height: 166px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.38);
   box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.5), 0 10px 18px rgba(148, 163, 184, 0.18);
   user-select: none;
+}
+
+.pet-avatar-visual {
+  font-size: 6.8rem;
+  line-height: 1;
+}
+
+.pet-avatar-visual.hamster-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
 }
 
 .pet-emoji.large {

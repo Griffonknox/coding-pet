@@ -8,6 +8,8 @@ import {
   type PetType,
 } from "./pet/pet-type";
 
+const HAMSTER_IMAGE_URL = new URL("./assets/pets/hamster.png", import.meta.url).href;
+
 const appState: {
   selectedPet: PetType | null;
   showControls: boolean;
@@ -17,6 +19,12 @@ const appState: {
 };
 
 const appElement = document.querySelector("#app");
+
+function renderPetImage(type: PetType, className: string): string {
+  return type === "hamster"
+    ? `<img class="${className} hamster-image" src="${HAMSTER_IMAGE_URL}" alt="Hamster" />`
+    : `<span class="${className}">${PET_TYPE_DETAILS[type].emoji}</span>`;
+}
 
 function toggleControls(): void {
   appState.showControls = !appState.showControls;
@@ -74,7 +82,7 @@ function renderPetView(): string {
     <main class="pet-shell">
       <div class="pet-stage" aria-live="polite">
         <div class="pet-focus" aria-label="${pet.name}">
-          <div class="pet-avatar">${pet.emoji}</div>
+          <div class="pet-avatar">${renderPetImage(pet.type, "pet-avatar-visual")}</div>
           <div class="state-pill state-${petStateStore.current}">${PET_STATE_LABELS[petStateStore.current]}</div>
         </div>
 
