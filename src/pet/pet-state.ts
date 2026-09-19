@@ -11,8 +11,13 @@ export const PET_STATE_LABELS: Record<PetState, string> = {
 
 export const petStateStore = {
   current: "idle" as PetState,
+  harnessReceived: false,
   set(nextState: PetState): PetState {
     this.current = nextState;
     return this.current;
+  },
+  markHarnessReceived(): boolean {
+    this.harnessReceived = true;
+    return this.harnessReceived;
   },
 };

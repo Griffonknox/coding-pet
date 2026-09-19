@@ -14,7 +14,7 @@ const appState: {
   selectedPet: PetType | null;
   showControls: boolean;
 } = {
-  selectedPet: null,
+  selectedPet: "hamster",
   showControls: false,
 };
 
@@ -83,28 +83,19 @@ function renderPetView(): string {
       <div class="pet-stage" aria-live="polite">
         <div class="pet-focus" aria-label="${pet.name}">
           <div class="pet-avatar">${renderPetImage(pet.type, "pet-avatar-visual")}</div>
-          <div class="state-pill state-${petStateStore.current}">${PET_STATE_LABELS[petStateStore.current]}</div>
+          <div class="pet-status-row">
+            <span
+              class="harness-indicator ${petStateStore.harnessReceived ? "received" : ""}"
+              aria-label="${petStateStore.harnessReceived ? "Harness event received" : "Waiting for harness event"}"
+              title="${petStateStore.harnessReceived ? "Harness event received" : "Waiting for harness event"}"
+            ></span>
+            <div class="state-pill state-${petStateStore.current}">${PET_STATE_LABELS[petStateStore.current]}</div>
+          </div>
         </div>
 
         <div class="hover-controls ${appState.showControls ? "is-open" : ""}">
           ${appState.showControls
             ? `
-              <div class="control-group pet-group" aria-label="Choose a pet">
-                ${PET_TYPE_OPTIONS.map(
-                  (option) => `
-                    <button
-                      type="button"
-                      class="mini-button pet-option ${option.type === pet.type ? "selected" : ""}"
-                      data-pet="${option.type}"
-                      aria-label="Select ${option.name}"
-                      title="${option.name}"
-                    >
-                      ${option.emoji}
-                    </button>
-                  `,
-                ).join("")}
-              </div>
-
               <div class="control-group state-group" aria-label="Change pet state">
                 ${Object.entries(PET_STATE_LABELS)
                   .map(
@@ -192,7 +183,7 @@ if (isTauri()) {
   void listen<unknown>("pet-event", ({ payload }) => {
     const event = parsePetEvent(payload);
     if (event) {
-      handlePetEvent(event, render);
+      handlePetEvent(event, render, { isHarnessEvent: true });
       render();
     }
   });

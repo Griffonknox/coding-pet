@@ -206,6 +206,30 @@ button {
   transform: translateY(2px);
 }
 
+.pet-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.harness-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #a1a1aa;
+  border: 1px solid rgba(113, 113, 122, 0.5);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5);
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.harness-indicator.received {
+  background: #22c55e;
+  border-color: rgba(34, 197, 94, 0.7);
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.2), 0 0 6px rgba(34, 197, 94, 0.35);
+}
+
 .pet-avatar {
   font-size: 5.9rem;
   line-height: 1;

@@ -22,7 +22,11 @@ export function parsePetEvent(payload: unknown): PetEvent | null {
     : null;
 }
 
-export function handlePetEvent(event: PetEvent, onStateChange?: () => void): PetState {
+export function handlePetEvent(
+  event: PetEvent,
+  onStateChange?: () => void,
+  options?: { isHarnessEvent?: boolean },
+): PetState {
   if (temporaryStateTimer) {
     clearTimeout(temporaryStateTimer);
     temporaryStateTimer = undefined;
@@ -30,6 +34,11 @@ export function handlePetEvent(event: PetEvent, onStateChange?: () => void): Pet
 
   const nextState: PetState = event.type;
   const currentState = petStateStore.set(nextState);
+
+  if (options?.isHarnessEvent) {
+    petStateStore.markHarnessReceived();
+  }
+
   onStateChange?.();
 
   if (event.type === "success" || event.type === "error") {
