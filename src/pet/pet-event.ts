@@ -19,6 +19,7 @@ export type PetEventUsage = {
 export type PetEvent = {
   type: PetEventType;
   usage?: PetEventUsage;
+  harnessStatus?: "connected" | "disconnected";
 };
 
 function parseEventUsage(raw: unknown): PetEventUsage | undefined {
@@ -39,6 +40,10 @@ function parseEventUsage(raw: unknown): PetEventUsage | undefined {
   return hasAnyUsage ? normalized : undefined;
 }
 
+function parseHarnessStatus(raw: unknown): "connected" | "disconnected" | undefined {
+  return raw === "connected" || raw === "disconnected" ? raw : undefined;
+}
+
 export function parsePetEvent(payload: unknown): PetEvent | null {
   if (typeof payload !== "object" || payload === null || !("type" in payload)) {
     return null;
@@ -49,11 +54,14 @@ export function parsePetEvent(payload: unknown): PetEvent | null {
     return null;
   }
 
-  const usage = "usage" in payload ? parseEventUsage(payload.usage) : undefined;
+  const record = payload as Record<string, unknown>;
+  const usage = "usage" in payload ? parseEventUsage(record.usage) : undefined;
+  const harnessStatus = parseHarnessStatus(record.harnessStatus);
 
   return {
     type: type as PetEventType,
     ...(usage ? { usage } : {}),
+    ...(harnessStatus ? { harnessStatus } : {}),
   };
 }
 
@@ -70,11 +78,17 @@ export function handlePetEvent(
   const nextState: PetState = event.type;
   const currentState = petStateStore.set(nextState);
 
+  if (event.harnessStatus) {
+    petStateStore.setHarnessStatus(event.harnessStatus);
+  }
+
   if (options?.isHarnessEvent) {
-    petStateStore.markHarnessReceived();
-    petStatsStore.recordHarnessEvent();
-    if (event.usage) {
-      petStatsStore.recordUsage(event.usage);
+    if (event.harnessStatus !== "disconnected") {
+      petStateStore.markHarnessReceived(event.harnessStatus ?? "connected");
+      petStatsStore.recordHarnessEvent();
+      if (event.usage) {
+        petStatsStore.recordUsage(event.usage);
+      }
     }
   }
 

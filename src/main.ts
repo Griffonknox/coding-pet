@@ -14,11 +14,9 @@ const HAMSTER_IMAGE_URL = new URL("./assets/pets/hamster.png", import.meta.url).
 const appState: {
   selectedPet: PetType | null;
   showControls: boolean;
-  showStats: boolean;
 } = {
   selectedPet: "hamster",
   showControls: false,
-  showStats: false,
 };
 
 const appElement = document.querySelector("#app");
@@ -31,9 +29,6 @@ function renderPetImage(type: PetType, className: string): string {
 
 function toggleControls(): void {
   appState.showControls = !appState.showControls;
-  if (!appState.showControls) {
-    appState.showStats = false;
-  }
   render();
 }
 
@@ -121,9 +116,9 @@ function renderPetView(): string {
           <div class="pet-avatar">${renderPetImage(pet.type, "pet-avatar-visual")}</div>
           <div class="pet-status-row">
             <span
-              class="harness-indicator ${petStateStore.harnessReceived ? "received" : ""}"
-              aria-label="${petStateStore.harnessReceived ? "Harness event received" : "Waiting for harness event"}"
-              title="${petStateStore.harnessReceived ? "Harness event received" : "Waiting for harness event"}"
+              class="harness-indicator ${petStateStore.harnessStatus === "connected" ? "received" : ""}"
+              aria-label="${petStateStore.harnessStatus === "connected" ? "Harness connected" : "Harness disconnected"}"
+              title="${petStateStore.harnessStatus === "connected" ? "Harness connected" : "Harness disconnected"}"
             ></span>
             <div class="state-pill state-${petStateStore.current}">${PET_STATE_LABELS[petStateStore.current]}</div>
           </div>
@@ -148,29 +143,15 @@ function renderPetView(): string {
                     `,
                   )
                   .join("")}
-                <button
-                  type="button"
-                  class="mini-button action-button stats-button ${appState.showStats ? "selected" : ""}"
-                  data-action="toggle-stats"
-                  aria-label="Toggle stats"
-                  title="Stats"
-                >
-                  ◌
-                </button>
                 <button type="button" class="mini-button action-button" data-action="collapse-controls" aria-label="Hide controls" title="Hide controls">
                   ←
                 </button>
               </div>
-
-              ${appState.showStats
-                ? `
-                  <div class="stats-popover" aria-live="polite">
-                    <div class="stats-row"><span>Events</span><strong>${stats.harnessEvents}</strong></div>
-                    <div class="stats-row"><span>Working</span><strong>${formatWorkingDuration(stats.workingMs)}</strong></div>
-                    <div class="stats-row"><span>AI Usage</span><strong>${formatCompactNumber(stats.aiUsage.totalTokens)}</strong></div>
-                  </div>
-                `
-                : ""}
+              <div class="stats-inline" aria-live="polite">
+                <div class="stats-row"><span>Events</span><strong>${stats.harnessEvents}</strong></div>
+                <div class="stats-row"><span>Working</span><strong>${formatWorkingDuration(stats.workingMs)}</strong></div>
+                <div class="stats-row"><span>AI Usage</span><strong>${formatCompactNumber(stats.aiUsage.totalTokens)}</strong></div>
+              </div>
             `
             : `
               <button type="button" class="cog-button" data-action="toggle-controls" aria-label="Open options" title="Options">
@@ -225,19 +206,10 @@ function render(): void {
     });
   });
 
-  const statsButtons = appElement.querySelectorAll("[data-action='toggle-stats']");
-  statsButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-      appState.showStats = !appState.showStats;
-      render();
-    });
-  });
-
   const collapseButtons = appElement.querySelectorAll("[data-action='collapse-controls']");
   collapseButtons.forEach((button) => {
     button.addEventListener("click", () => {
       appState.showControls = false;
-      appState.showStats = false;
       render();
     });
   });
