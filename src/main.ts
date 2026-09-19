@@ -7,15 +7,18 @@ import {
   PET_TYPE_OPTIONS,
   type PetType,
 } from "./pet/pet-type";
+import { petStatsStore } from "./pet/pet-stats";
 
 const HAMSTER_IMAGE_URL = new URL("./assets/pets/hamster.png", import.meta.url).href;
 
 const appState: {
   selectedPet: PetType | null;
   showControls: boolean;
+  showStats: boolean;
 } = {
   selectedPet: "hamster",
   showControls: false,
+  showStats: false,
 };
 
 const appElement = document.querySelector("#app");
@@ -28,6 +31,9 @@ function renderPetImage(type: PetType, className: string): string {
 
 function toggleControls(): void {
   appState.showControls = !appState.showControls;
+  if (!appState.showControls) {
+    appState.showStats = false;
+  }
   render();
 }
 
@@ -71,8 +77,38 @@ function renderSelection(): string {
   `;
 }
 
+function formatCompactNumber(value: number): string {
+  if (value >= 1000000) {
+    return `${(value / 1000000).toFixed(1)}M`;
+  }
+
+  if (value >= 1000) {
+    return `${(value / 1000).toFixed(1)}k`;
+  }
+
+  return value.toString();
+}
+
+function formatWorkingDuration(milliseconds: number): string {
+  const totalSeconds = Math.max(0, Math.floor(milliseconds / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+
+  if (minutes > 0) {
+    return `${minutes}m ${seconds}s`;
+  }
+
+  return `${seconds}s`;
+}
+
 function renderPetView(): string {
   const pet = appState.selectedPet ? PET_TYPE_DETAILS[appState.selectedPet] : null;
+  const stats = petStatsStore.getSnapshot();
 
   if (!pet) {
     return renderSelection();
@@ -112,10 +148,29 @@ function renderPetView(): string {
                     `,
                   )
                   .join("")}
+                <button
+                  type="button"
+                  class="mini-button action-button stats-button ${appState.showStats ? "selected" : ""}"
+                  data-action="toggle-stats"
+                  aria-label="Toggle stats"
+                  title="Stats"
+                >
+                  ◌
+                </button>
                 <button type="button" class="mini-button action-button" data-action="collapse-controls" aria-label="Hide controls" title="Hide controls">
                   ←
                 </button>
               </div>
+
+              ${appState.showStats
+                ? `
+                  <div class="stats-popover" aria-live="polite">
+                    <div class="stats-row"><span>Events</span><strong>${stats.harnessEvents}</strong></div>
+                    <div class="stats-row"><span>Working</span><strong>${formatWorkingDuration(stats.workingMs)}</strong></div>
+                    <div class="stats-row"><span>AI Usage</span><strong>${formatCompactNumber(stats.aiUsage.totalTokens)}</strong></div>
+                  </div>
+                `
+                : ""}
             `
             : `
               <button type="button" class="cog-button" data-action="toggle-controls" aria-label="Open options" title="Options">
@@ -170,10 +225,19 @@ function render(): void {
     });
   });
 
+  const statsButtons = appElement.querySelectorAll("[data-action='toggle-stats']");
+  statsButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      appState.showStats = !appState.showStats;
+      render();
+    });
+  });
+
   const collapseButtons = appElement.querySelectorAll("[data-action='collapse-controls']");
   collapseButtons.forEach((button) => {
     button.addEventListener("click", () => {
       appState.showControls = false;
+      appState.showStats = false;
       render();
     });
   });
@@ -188,5 +252,9 @@ if (isTauri()) {
     }
   });
 }
+
+window.addEventListener("beforeunload", () => {
+  petStatsStore.finalizeIfNeeded();
+});
 
 render();
